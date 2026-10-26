@@ -1,0 +1,31 @@
+
+[INFO] index.html = 208156 字节 / 203.3 KB / 4973 行
+[INFO] 内联非空 script 块 = 4 个
+
+[INFO] C remap: {"cards":2,"names":["被改名店铺","正常店"],"restCount":2,"reviewCount":1,"badIds":[],"orphans":0,"orphanDetail":[],"onmouseover":0,"onload":0,"imgs":0,"emptyShown":false,"toast":"","hero":"已收录 2 家累计 1 条评价全站平均 8.0 分","clearedAt":null,"heroReviews":"1"}
+[INFO] D 抽屉: {"drawerOpen":true,"delButtons":2,"injectedAttr":0,"onload":0,"reviewCount":2,"badDelIds":[]}
+
+[INFO] B1: {"cards":4,"names":["超长id店","合法店","空id店","数字id店"],"restCount":4,"reviewCount":0,"badIds":[],"orphans":0,"orphanDetail":[],"onmouseover":0,"onload":0,"imgs":0,"emptyShown":false,"toast":"","hero":"已收录 4 家累计 0 条评价全站平均 — 分","clearedAt":null,"heroReviews":"0"}
+[INFO] B2: {"cards":1,"names":["合法店"],"restCount":1,"reviewCount":2,"badIds":[],"orphans":1,"orphanDetail":["rv_orphan->not_exist_shop"],"onmouseover":0,"onload":0,"imgs":0,"emptyShown":false,"toast":"","hero":"已收录 1 家累计 1 条评价全站平均 8.0 分","heroReviews":"1"} 抽屉: {"reviews":1,"hint":false}
+[INFO] 说明：localStorage 原始记录仍留着 1 条孤儿（refresh=1），因本次无 id 需修复故未触发回写；每次加载都会被再次过滤，不影响展示与统计。
+
+[INFO] E1 旧格式: {"cards":1,"rest":1,"toast":""}
+[INFO] E3 空+无clearedAt: {"cards":25,"toast":"本机数据为空或格式异常，已载入示例数据"}
+[INFO] E4 空+有clearedAt: {"cards":0,"empty":true,"toast":""}
+[INFO] E6 清空: {"cards":0,"stored":0,"clearedAt":"2026-10-24T09:56:00.099Z"} → 刷新后: {"cards":0,"stored":0,"emptyShown":true,"toast":"","hero":"已收录 0 家累计 0 条评价全站平均 — 分"}
+[INFO] E6 恢复示例: {"found":true,"cards":25,"stored":25,"clearedAt":null}
+
+[INFO] 回归: {"total":25,"hotpot":4,"pit":3,"rec":17,"hero":"已收录 25 家累计 75 条评价全站平均 6.6 分","chipText":["全部 25","全家桶 3","超大杯 6","大杯 8","中杯 5","小杯 3","待评级 0"]}
+[INFO] 地图: {"hasCanvas":true,"tmap":"object","fallbackHidden":true}
+[INFO] pageerror/console.error 共 52 条，应用级 0 条
+   - Uncaught (in promise) SyntaxError: Failed to execute 'open' on 'XMLHttpRequest': Invalid URL
+   - 鉴权失败：网络请求失败。
+   - 鉴权失败：海外图请求失败。
+   - 鉴权失败：网络请求失败。
+   - Uncaught (in promise) SyntaxError: Failed to execute 'open' on 'XMLHttpRequest': Invalid URL
+   - 鉴权失败：网络请求失败。
+
+===== 第 2 轮补充验证 =====
+断言总数: 64 | 通过: 64 | 失败: 0
+
+[RESULT] total=64 passed=64 failed=0

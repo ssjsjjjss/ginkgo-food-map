@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<meta name="description" content="电子科技大学 Ginkgo 烹饪社的成都美食地图：按杯型评分，收录清水河校区周边、建设路、春熙路、玉林的觅食清单。" />
+<title>Ginkgo 美食地图 · 电子科技大学 Ginkgo 烹饪社</title>
+<link rel="manifest" href="./manifest.webmanifest" />
+<meta name="theme-color" content="#E9B949" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Ginkgo地图" />
+<script>
+  // 分享码校验会拦掉不带参数的静态资源：manifest 必须在运行时补上 sharecode
+  (function () {
+    try {
+      var code = new URLSearchParams(location.search).get('sharecode');
+      if (!code) return;
+      var link = document.querySelector('link[rel="manifest"]');
+      if (link) link.href = './manifest.webmanifest?sharecode=' + encodeURIComponent(code);
+    } catch (e) { /* 老浏览器忽略 */ }
+  })();
+</script>
+<style>
+/*__CSS__*/
+</style>
+
+<!-- ① 纯逻辑块：无 DOM、无事件、无副作用，可整块抽出做单测 -->
+<script id="core">
+//__CORE__
+</script>
+
+<!-- ② 腾讯地图官方「代理模式」配置（占位符由运行时替换，请勿修改）
+     注意：发布到公网时后端会整段移除本块，并改用服务端注入的 Key -->
+<!--__TMAP_BEGIN__-->
+<script>
+  window._TMapSecurityConfig = {
+    serviceHost: 'http://127.0.0.1:__WB_HTTP_PORT__/_TMapService/_wbt/__WB_TMAP_SECRET__',
+  };
+</script>
+<!--__TMAP_END__-->
+<script async src="https://map.qq.com/api/gljs?v=1.exp&libraries=service" onerror="window.__tmapLoadError=true"></script>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ======================= 顶部状态条 ======================= -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19">
+          <path d="M6.2 8.4h11.6l-1.35 10.2H7.55Z" fill="#E9B949" stroke="#2B2A26" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M17.1 10.4h1.35a2.15 2.15 0 0 1 0 4.3h-1.1" fill="none" stroke="#2B2A26" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M4.9 5.6h14.2" stroke="#2B2A26" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="brand-name">Ginkgo 美食地图</span>
+      <span class="brand-tag">Ginkgo 烹饪社</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div id="syncStatus" class="sync-pill" title="数据保存状态">
+      <span class="check">✓</span>正在读取本机数据…
+    </div>
+
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="btnRanking" type="button">排行榜</button>
+      <button class="btn btn-ghost" id="btnContrib" type="button">贡献榜</button>
+      <button class="btn btn-ghost" id="btnHelp" type="button">评分说明</button>
+      <button class="btn btn-ink" id="btnData" type="button">数据管理</button>
+    </div>
+  </header>
+
+  <!-- ======================= 首屏封面 ======================= -->
+  <section class="hero">
+    <div class="hero-text">
+      <p class="eyebrow">UNIVERSITY OF ELECTRONIC SCIENCE AND TECHNOLOGY OF CHINA</p>
+      <h1>Ginkgo 美食地图</h1>
+      <p class="hero-sub">电子科技大学 Ginkgo 烹饪社 · 成都觅食指南。吃了就打分，按杯型论英雄——不好吃就举牌子。</p>
+      <div class="hero-stats" id="heroStats"></div>
+      <div class="hero-actions">
+        <button class="btn btn-gold" id="btnAddRestaurant" type="button">添加餐厅</button>
+        <button class="btn btn-ink" id="btnWriteReview" type="button">写评价</button>
+        <button class="btn btn-ghost" id="btnOpenData" type="button">导入 / 导出</button>
+      </div>
+    </div>
+    <figure class="hero-cover">
+      <img id="heroCover" alt="Ginkgo 烹饪社封面：一只白色兔子举着「辣鸡！」的牌子" />
+      <figcaption>不好吃，就举牌子。</figcaption>
+    </figure>
+  </section>
+
+  <!-- ======================= 列表 + 地图 ======================= -->
+  <main class="workspace">
+    <section class="panel" aria-label="餐厅列表">
+      <div class="panel-head">
+        <div class="search-row">
+          <input id="searchInput" type="text" autocomplete="off" placeholder="搜店名 / 地址 / 标签 / 分类" aria-label="搜索餐厅" />
+          <button class="icon-btn" id="btnClearSearch" type="button" title="清空搜索">×</button>
+        </div>
+        <div class="chip-row" id="tierChips" role="group" aria-label="杯型筛选"></div>
+        <div class="toolbar-row">
+          <select id="sortSelect" aria-label="排序方式">
+            <option value="score">综合评分（默认）</option>
+            <option value="taste">味道</option>
+            <option value="value">性价比</option>
+            <option value="service">服务</option>
+            <option value="ambience">环境</option>
+            <option value="reviews">评价数</option>
+            <option value="price">人均（低到高）</option>
+          </select>
+          <select id="viewSelect" aria-label="视图筛选">
+            <option value="all">全部店铺</option>
+            <option value="recommend">只显示推荐（大杯及以上）</option>
+            <option value="pit">只看踩雷（小杯）</option>
+          </select>
+        </div>
+      </div>
+      <div class="list-meta">
+        <span id="listCount">共 0 家</span>
+        <span id="listHint">点卡片看详情 · 点地图看店铺</span>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="list-empty" id="listEmpty" hidden></div>
+    </section>
+
+    <section class="mapwrap" id="mapWrap" aria-label="地图">
+      <div id="map"></div>
+
+      <div class="map-fallback" id="mapFallback" hidden>
+        <div class="map-fallback-card">
+          <svg viewBox="0 0 48 48" width="46" height="46" aria-hidden="true">
+            <path d="M24 4a13 13 0 0 0-13 13c0 9.6 13 27 13 27s13-17.4 13-27A13 13 0 0 0 24 4Z" fill="#E9B949" stroke="#2B2A26" stroke-width="2"/>
+            <circle cx="24" cy="17" r="5" fill="#FBF7EF"/>
+          </svg>
+          <h3>地图需要联网才能加载</h3>
+          <p>地图需在联网预览环境中加载（腾讯地图 SDK），你仍可用右侧列表浏览与评价。<br />列表、打分、导入导出、排行榜等功能全部可用。</p>
+        </div>
+      </div>
+
+      <div class="map-controls" id="mapControls" hidden>
+        <button id="mapZoomIn" type="button" title="放大" aria-label="放大">+</button>
+        <button id="mapZoomOut" type="button" title="缩小" aria-label="缩小">−</button>
+        <button id="mapReset" type="button" title="回到全城" aria-label="回到全城">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+            <circle cx="10" cy="10" r="7.2" fill="none" stroke="#2B2A26" stroke-width="1.7"/>
+            <circle cx="10" cy="10" r="2.1" fill="#2B2A26"/>
+          </svg>
+        </button>
+        <button id="mapLocate" type="button" title="定位到我附近的店" aria-label="定位到我附近的店">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+            <path d="M10 2.4v3M10 14.6v3M2.4 10h3M14.6 10h3" stroke="#2B2A26" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="10" cy="10" r="3.4" fill="none" stroke="#2B2A26" stroke-width="1.7"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="map-pick-tip" id="mapPickTip" hidden>
+        <span>点选模式：在地图上点击落点，Esc 取消</span>
+        <button class="btn btn-sm" id="mapPickCancel" type="button">取消</button>
+      </div>
+
+      <div class="map-legend" id="mapLegend" role="group" aria-label="杯型图例"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ======================= 详情抽屉 ======================= -->
+<div class="drawer-scrim" id="drawerScrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="店铺详情">
+  <div class="drawer-scroll" id="drawerBody"></div>
+</aside>
+
+<!-- ======================= 写评价 ======================= -->
+<div class="modal" id="modalReview" hidden>
+  <div class="modal-card modal-lg" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+    <div class="modal-head">
+      <h2 id="reviewTitle">写一条评价</h2>
+      <button class="icon-btn" data-close="modalReview" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" id="reviewBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="modalReview" type="button">取消</button>
+      <button class="btn btn-gold" id="reviewSubmit" type="button">提交评价</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 添加 / 编辑餐厅 ======================= -->
+<div class="modal" id="modalRestaurant" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="restTitle">
+    <div class="modal-head">
+      <h2 id="restTitle">添加餐厅</h2>
+      <button class="icon-btn" data-close="modalRestaurant" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" id="restBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="modalRestaurant" type="button">取消</button>
+      <button class="btn btn-gold" id="restSubmit" type="button">保存店铺</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 数据管理 / 导入导出 ======================= -->
+<div class="modal" id="modalData" hidden>
+  <div class="modal-card modal-lg" role="dialog" aria-modal="true" aria-labelledby="dataTitle">
+    <div class="modal-head">
+      <h2 id="dataTitle">数据管理</h2>
+      <span class="sub" id="dataSub"></span>
+      <button class="icon-btn" data-close="modalData" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="data-block">
+        <h3>三步上手</h3>
+        <ol class="howto">
+          <li><b>录评价</b>：地图上点一家店 → 「写评价」→ 拖四个滑杆（味道 / 性价比 / 服务 / 环境，各 10 分），
+            可以配最多 3 张图。提交后这家店的杯型会立刻重算。</li>
+          <li><b>收大家的评价</b>：把腾讯文档·收集表发群里（按下面「收集表字段对照」建题），收完在腾讯文档里
+            「导出为 CSV」，回到这里粘贴或选文件，预览确认后导入。</li>
+          <li><b>看结果</b>：右上角「排行榜」按杯型分档；「评分说明」里写了四个维度怎么算、杯型怎么定。</li>
+        </ol>
+        <p class="hint-line">默认数据存在你自己的浏览器里。要让所有人看到同一份评价，见下面「多人同步」。</p>
+      </div>
+
+      <div class="data-block">
+        <h3>导入收集表</h3>
+        <p>支持腾讯文档·收集表导出的 CSV、Excel 另存的 CSV，或者直接把表格复制粘贴进下面的框（CSV / TSV 都行）。表头会自动识别中英文别名。</p>
+        <div class="field">
+          <textarea id="csvInput" rows="4" placeholder="店名,味道,性价比,服务,环境,推荐,昵称,点评,日期&#10;银桦餐厅,7,7,6,6,推荐,小林,二楼阿姨手不抖,2026-10-01"></textarea>
+        </div>
+        <div class="row-btns">
+          <button class="btn btn-sm" id="btnCsvPick" type="button">选择 .csv / .tsv / .txt 文件</button>
+          <input type="file" id="csvFile" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden />
+          <button class="btn btn-sm btn-gold" id="btnCsvParse" type="button">解析并预览</button>
+          <button class="btn btn-sm btn-ghost" id="btnTemplate" type="button">下载导入模板 CSV</button>
+        </div>
+        <div id="importPreview"></div>
+        <div id="importActions" class="row-btns" hidden>
+          <label class="field-hint" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)">
+            <input type="checkbox" id="autoCreateRestaurant" checked /> 店名不存在时自动创建为「待评级」店铺
+          </label>
+          <button class="btn btn-gold btn-sm" id="btnCsvCommit" type="button">确认导入</button>
+        </div>
+      </div>
+
+      <details class="data-fold">
+        <summary>更多设置：地图搜索 · 备份 · 多人同步 · 清空数据</summary>
+
+        <div class="data-block">
+          <h3>地图搜索（Key）</h3>
+          <p id="mapKeyHint">正在检查…</p>
+          <div class="field">
+            <label for="mapKeyInput">腾讯位置服务 Key</label>
+            <input id="mapKeyInput" type="text" autocomplete="off" spellcheck="false"
+              placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+              style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px" />
+          </div>
+          <div class="row-btns">
+            <button class="btn btn-ink btn-sm" id="btnSaveMapKey" type="button">保存并启用</button>
+          </div>
+          <p class="hint-line">保存后刷新页面生效。Key 只存在服务器上，不会写进网页源码；建议到腾讯位置服务控制台把本站域名加入白名单。</p>
+        </div>
+
+        <div class="data-block">
+          <h3>管理员</h3>
+          <p id="adminHint">未登录。输入口令后可以删除/恢复任何人的评价。</p>
+          <div class="field" id="adminChangeBox" hidden>
+            <label for="adminNewCode">新口令（至少 6 位）</label>
+            <input id="adminNewCode" type="text" autocomplete="off" spellcheck="false" placeholder="留空则不改" />
+          </div>
+          <div class="row-btns" id="adminOpsBtns" hidden>
+            <button class="btn btn-sm" id="btnAdminChange" type="button">修改口令</button>
+            <button class="btn btn-sm btn-danger" id="btnAdminLogout" type="button">退出管理</button>
+          </div>
+          <div class="field" id="adminMemberBox" hidden>
+            <label for="adminMemberCode">社团口令（开启后，没填的人只能看、不能写）</label>
+            <input id="adminMemberCode" type="text" autocomplete="off" spellcheck="false" placeholder="填新口令开启，留空保存 = 关闭" />
+            <p id="adminMemberHint" class="hint-line"></p>
+          </div>
+          <div class="row-btns" id="adminMemberBtns" hidden>
+            <button class="btn btn-sm btn-ink" id="btnAdminMemberSave" type="button">保存社团口令</button>
+          </div>
+          <div id="adminTrash"></div>
+          <div class="field" id="adminPurgeBox" hidden>
+            <label>永久清理（会先自动导出一份快照到你的电脑）</label>
+            <label class="field-hint" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)">
+              <input type="checkbox" id="purgeDropPhotos" /> 同时清空所有照片（照片最占空间，且不可恢复）
+            </label>
+            <div class="row-btns">
+              <button class="btn btn-sm btn-danger" id="btnAdminPurge" type="button">永久清理</button>
+            </div>
+          </div>
+          <p class="hint-line">口令只存在服务器上（存的是哈希），交接社团时在这里改成新口令即可，不用动代码。登录状态保持 7 天。</p>
+        </div>
+
+        <div class="data-block">
+          <h3>JSON 备份</h3>
+          <p>导出的是全量快照（含店铺与评价）。图片只导出索引 key，不包含二进制内容——照片始终只保存在本机浏览器里。</p>
+          <div class="row-btns">
+            <button class="btn btn-sm" id="btnExportJson" type="button">导出 JSON 快照</button>
+            <button class="btn btn-sm" id="btnImportJsonPick" type="button">导入 JSON 文件</button>
+            <input type="file" id="importJsonFile" accept=".json,application/json" hidden />
+          </div>
+        </div>
+
+        <div class="data-block">
+          <h3>多人同步（进阶）</h3>
+          <p id="syncHint">正在读取状态…</p>
+          <div class="field">
+            <label for="syncEndpoint">接口地址</label>
+            <input id="syncEndpoint" type="text" placeholder="/api 或 https://xxx.supabase.co/rest/v1" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="syncAnonKey">密钥（自建后端填 same-origin 即可）</label>
+            <input id="syncAnonKey" type="text" placeholder="same-origin" autocomplete="off" spellcheck="false" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px" />
+          </div>
+          <div class="row-btns">
+            <button class="btn btn-ink btn-sm" id="btnSyncSave" type="button">保存并连接</button>
+            <button class="btn btn-sm" id="btnSyncTest" type="button">测试连接</button>
+            <button class="btn btn-sm" id="btnSyncNow" type="button">立即同步</button>
+            <button class="btn btn-sm btn-ghost" id="btnSyncSql" type="button">复制 Supabase 建表 SQL</button>
+            <button class="btn btn-sm btn-danger" id="btnSyncDisconnect" type="button">断开云端</button>
+          </div>
+          <p class="field-hint" style="margin:10px 0 0;font-size:12px;color:var(--ink-soft)">
+            当前模式：<b id="syncModeLabel">local</b>
+          </p>
+          <details style="margin-top:10px">
+            <summary style="cursor:pointer;font-size:13px;color:var(--ink-soft)">想用 Supabase？三步接通</summary>
+            <ol style="font-size:13px;line-height:1.95;color:var(--ink-soft);margin:8px 0 0;padding-left:20px">
+              <li>supabase.com 注册（免费），新建 project，等状态变 Active。</li>
+              <li>Project Settings → API：复制 <b>Project URL</b> 和 <b>anon public</b>。</li>
+              <li>点「复制 Supabase 建表 SQL」，到 SQL Editor 执行一次；回来填两个值，点「保存并连接」。</li>
+            </ol>
+            <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0">注意：Supabase 的接口域名在部分国内网络下会被重置，连不上属于网络问题。</p>
+          </details>
+        </div>
+
+        <div class="data-block">
+          <h3>收集表字段对照</h3>
+          <p>在《腾讯文档 · 收集表》里按这 9 个字段建题，收集结束后「导出为 CSV」再回到这里导入，字段就能一一对上。</p>
+          <div class="table-wrap">
+            <table class="preview">
+              <thead><tr><th>收集表字段</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td>店名</td><td>填空题（必填）</td><td>与地图里的店名一致；不存在时可自动建档</td></tr>
+                <tr><td>味道</td><td>数字 0–10</td><td>空着按 7 分补齐</td></tr>
+                <tr><td>性价比</td><td>数字 0–10</td><td>空着按 7 分补齐</td></tr>
+                <tr><td>服务</td><td>数字 0–10</td><td>空着按 7 分补齐</td></tr>
+                <tr><td>环境</td><td>数字 0–10</td><td>空着按 7 分补齐</td></tr>
+                <tr><td>推荐</td><td>单选</td><td>推荐 / 不推荐（也认 是/否、yes/no）</td></tr>
+                <tr><td>昵称</td><td>填空题</td><td>留空显示「匿名社员」</td></tr>
+                <tr><td>点评</td><td>多行文本</td><td>至少 5 个字，否则该行会被跳过</td></tr>
+                <tr><td>日期</td><td>日期</td><td>可留空，默认导入时间</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="data-block">
+          <h3>本机数据</h3>
+          <p id="storageInfo">正在统计…</p>
+          <div class="row-btns">
+            <button class="btn btn-sm" id="btnRestoreSeed" type="button">恢复示例数据</button>
+            <button class="btn btn-sm btn-danger" id="btnClearAll" type="button">清空全部数据</button>
+          </div>
+        </div>
+
+      </details>
+
+    </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalData" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 管理员登录 ======================= -->
+<div class="modal" id="modalAdminLogin" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
+    <div class="modal-head">
+      <h2 id="adminLoginTitle">管理员登录</h2>
+      <button class="icon-btn" data-close="modalAdminLogin" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="data-desc">数据管理、导入收集表、导出备份、改口令、永久清理这些操作只有管理员能做，请输入口令。</p>
+      <div class="field">
+        <label for="adminCode">管理员口令</label>
+        <input id="adminCode" type="text" autocomplete="off" spellcheck="false" placeholder="输入口令后回车" />
+      </div>
+      <div class="row-btns">
+        <button class="btn btn-ink btn-sm" id="btnAdminLogin" type="button">登录</button>
+      </div>
+      <p id="adminLoginErr" class="hint-line"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalAdminLogin" type="button">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 排行榜 ======================= -->
+<div class="modal" id="modalRanking" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="rankTitle">
+    <div class="modal-head">
+      <h2 id="rankTitle">杯型排行榜</h2>
+      <button class="icon-btn" data-close="modalRanking" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" id="rankBody"></div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalRanking" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 贡献榜 ======================= -->
+<div class="modal" id="modalContrib" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="contribTitle">
+    <div class="modal-head">
+      <h2 id="contribTitle">贡献榜</h2>
+      <button class="icon-btn" data-close="modalContrib" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" id="contribBody"></div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalContrib" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 评分说明 ======================= -->
+<div class="modal" id="modalHelp" hidden>
+  <div class="modal-card modal-lg" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-head">
+      <h2 id="helpTitle">评分说明</h2>
+      <button class="icon-btn" data-close="modalHelp" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="help-hero">
+        <img id="helpCover" alt="社团封面：白色兔子举着「辣鸡！」的牌子" />
+        <p>这张封面是社团的传家宝：<b>吃到难吃的，就举牌子。</b><br />本榜单是社团内部测评，不是商业榜单，也不接推广。</p>
+      </div>
+
+      <div class="note" style="margin-bottom:13px">
+        <h4>四个维度分别看什么</h4>
+        <ul>
+          <li><b>味道</b>：调味、火候、食材新鲜度，最重的一项。</li>
+          <li><b>性价比</b>：同样的钱能吃到多少东西，学生党视角。</li>
+          <li><b>服务</b>：出餐速度、阿姨手抖不抖、加汤加饭爽不爽快。</li>
+          <li><b>环境</b>：座位、空调、油烟、卫生，以及适不适合久坐讨论。</li>
+        </ul>
+      </div>
+
+      <div class="note" style="margin-bottom:13px">
+        <h4>分数怎么算</h4>
+        <ul>
+          <li>单条评价总分 = （味道 + 性价比 + 服务 + 环境）÷ 4，内部保留 2 位小数。</li>
+          <li>店铺综合分 = 所有评价总分的算术平均，页面展示保留 1 位小数。</li>
+          <li>分维度均分 = 该维度所有评价的算术平均。</li>
+          <li>推荐率 = 勾选「推荐」的评价数 ÷ 评价总数。</li>
+          <li>杯型判定用<b>未四舍五入</b>的原始分数比较，所以 8.59 和 8.60 会落在不同档位。</li>
+        </ul>
+      </div>
+
+      <div class="note">
+        <h4>杯型五档</h4>
+        <table class="tier-table" id="helpTierTable"></table>
+        <p style="margin:9px 0 0;color:var(--muted)">没有任何评价的店显示为「待评级」灰杯，欢迎第一个去吃。</p>
+      </div>
+
+      <div class="note" style="margin-top:13px">
+        <h4>免责声明</h4>
+        <p style="margin:0">所有分数来自社团同学的自发投稿，可能带有个人口味偏差，仅代表当天那一顿的水平。店铺营业状态、价格与口味均可能变化，出发前建议先确认。封面表情包由社团提供，仅限社团内部使用。</p>
+      </div>
+
+
+      <div class="data-block">
+        <h3>社团口令</h3>
+        <p id="memberHint">管理员还没开启社团口令，现在拿到链接的人都能写评价。</p>
+        <div class="field">
+          <label for="memberCode">社团口令（只有管理员开启后才需要填）</label>
+          <input id="memberCode" type="text" autocomplete="off" spellcheck="false" placeholder="管理员给你的口令" />
+        </div>
+        <div class="row-btns">
+          <button class="btn btn-sm btn-ink" id="btnMemberSave" type="button">保存</button>
+          <button class="btn btn-sm btn-ghost" id="btnMemberClear" type="button">清除</button>
+        </div>
+        <p class="hint-line">填过一次就会记在这台设备上。开启后，写评价、加店都会带上它；
+        没填的人只能看，不能写——这样链接就算流出去了，外人也没法刷分。</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close="modalHelp" type="button">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 二次确认 ======================= -->
+<div class="modal" id="confirmModal" hidden>
+  <div class="modal-card" style="max-width:420px" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-head">
+      <h2 id="confirmTitle">确认操作</h2>
+      <button class="icon-btn" data-close="confirmModal" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" id="confirmBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="confirmModal" type="button">取消</button>
+      <button class="btn btn-danger" id="confirmOk" type="button">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 大图 ======================= -->
+<div class="lightbox" id="lightbox" hidden>
+  <button class="icon-btn" id="lightboxClose" type="button" aria-label="关闭">×</button>
+  <img id="lightboxImg" alt="评价照片大图" />
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+//__SEED__
+</script>
+<script>
+//__APP__
+</script>
+</body>
+</html>

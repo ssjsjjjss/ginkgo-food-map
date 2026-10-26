@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ginkgo 美食地图 · 工作人员指南</title>
+<style>
+:root{
+  --bg:#f7f5f0; --card:#ffffff; --ink:#22201c; --ink-soft:#5b564e;
+  --muted:#8a8378; --line:#e6e0d6; --accent:#C0392B; --accent-soft:#fdf3ef;
+  --gold:#B5651D; --code-bg:#f2efe8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:0 16px 80px;
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:16px; line-height:1.75;
+}
+.wrap{max-width:820px;margin:0 auto}
+header.hero{
+  margin:28px 0 8px;padding:26px 28px;border-radius:16px;
+  background:linear-gradient(135deg,#ffffff 0%,#fdf6ef 100%);
+  border:1px solid var(--line);
+}
+header.hero h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px}
+header.hero .sub{color:var(--ink-soft);font-size:14px}
+h1{font-size:26px;margin:36px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+h2{font-size:21px;margin:34px 0 12px;padding-left:12px;border-left:4px solid var(--accent)}
+h3{font-size:17px;margin:24px 0 10px;color:var(--gold)}
+h4{font-size:15px;margin:18px 0 8px;color:var(--ink-soft)}
+p{margin:10px 0}
+a{color:var(--accent);text-decoration:none;word-break:break-all}
+a:hover{text-decoration:underline}
+ul,ol{margin:10px 0;padding-left:26px}
+li{margin:5px 0}
+blockquote{
+  margin:14px 0;padding:12px 16px;border-radius:10px;
+  background:var(--accent-soft);border-left:4px solid var(--accent);
+  color:var(--ink-soft);
+}
+blockquote p{margin:4px 0}
+hr{border:none;border-top:1px solid var(--line);margin:32px 0}
+code{
+  background:var(--code-bg);padding:2px 6px;border-radius:5px;
+  font-family:"SFMono-Regular",Consolas,"Courier New",monospace;font-size:.92em;
+}
+pre{
+  background:var(--code-bg);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;overflow-x:auto;margin:14px 0;
+}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:15px;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:#f0ece4;font-weight:600;white-space:nowrap}
+tbody tr:nth-child(even){background:#fcfaf6}
+.toc{
+  margin:20px 0 8px;padding:16px 20px;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;
+}
+.toc b{display:block;margin-bottom:8px;font-size:15px}
+.toc a{display:inline-block;margin:3px 14px 3px 0;color:var(--ink-soft);font-size:14px}
+.toc a:hover{color:var(--accent)}
+footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:13px;text-align:center}
+@media (max-width:600px){
+  body{font-size:15px}
+  header.hero{padding:20px 18px}
+  header.hero h1{font-size:22px}
+  table{font-size:14px}
+  th,td{padding:7px 9px}
+}
+@media print{ body{background:#fff} .toc{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <h1>Ginkgo 美食地图 · 工作人员指南</h1>
+  <div class="sub">电子科技大学 Ginkgo 烹饪社 · 内部工具文档</div>
+</header>
+<nav class="toc"><b>目录</b><a href="#一-网站是什么性质">一、网站是什么性质</a><a href="#二-架构与运行">二、架构与运行</a><a href="#三-数据模型">三、数据模型</a><a href="#四-同步机制-出问题先看这节">四、同步机制（出问题先看这节）</a><a href="#五-口令与安全">五、口令与安全</a><a href="#六-日常需要哪些操作">六、日常需要哪些操作</a><a href="#七-核心代码在哪">七、核心代码在哪</a><a href="#八-测试">八、测试</a><a href="#九-故障排查">九、故障排查</a><a href="#十-容量与演进路线">十、容量与演进路线</a><a href="#十一-换届交接清单">十一、换届交接清单</a><a href="#十二-安全与合规注意">十二、安全与合规注意</a><a href="#十三-最后">十三、最后</a></nav>
+<h1>Ginkgo 美食地图 · 工作人员指南</h1>
+<blockquote><p>面向<strong>社团里负责维护这个网站的人</strong>（社长、技术负责人、下一届接班人）。</p><p>社员请看《社员使用指南》。这份只讲 <strong>它怎么跑起来的、怎么让它一直跑下去、坏了怎么救</strong>。</p></blockquote>
+<p><strong>当前线上地址</strong>：<code>https://ginkgo-food-map.app.workbuddy.host/?sharecode=YOUR_SHARECODE</code></p>
+<hr/>
+<h2>一、网站是什么性质</h2>
+<table><thead><tr><th>项目</th><th>说明</th></tr></thead><tbody><tr><td>定位</td><td>电子科技大学 Ginkgo 烹饪社<strong>内部工具</strong>，不是商业产品、不盈利、不接推广</td></tr><tr><td>使用者</td><td>拿到链接的人（默认可看；开启社员口令后才可写）</td></tr><tr><td>技术形态</td><td>一个<strong>单页网页应用</strong> + 一个<strong>零依赖的 Node 后端</strong>（<code>server.js</code>）</td></tr><tr><td>数据存储</td><td>服务器上的一个 JSON 文件 <code>data/store.json</code>（不是数据库）</td></tr><tr><td>账号体系</td><td><strong>没有</strong>。免注册，靠「社员口令 + 管理员口令」两级口令区分权限</td></tr><tr><td>托管</td><td>WorkBuddy 应用发布能力，只有<strong>一个 HTTP 端口</strong></td></tr><tr><td>第三方依赖</td><td>运行时<strong>零</strong>（只用 Node 内置模块）；页面只加载腾讯地图底图/搜索 SDK</td></tr></tbody></table>
+<h3>1.1 权限分三级</h3>
+<table><thead><tr><th>身份</th><th>能做什么</th></tr></thead><tbody><tr><td><strong>访客</strong>（有链接、没填社员口令）</td><td>看地图、看评价、看排行榜。<strong>不能写</strong></td></tr><tr><td><strong>社员</strong>（填了社员口令）</td><td>写评价、加店、编辑店铺、回复；只能删<strong>自己</strong>写的东西</td></tr><tr><td><strong>管理员</strong>（填了管理员口令）</td><td>上面全部 + 删/恢复<strong>任何人</strong>的评价和店铺 + 导入收集表 + 导出备份 + 改口令 + 永久清理 + 设置地图 Key</td></tr></tbody></table>
+<h3>1.2 必须理解的两条边界</h3>
+<ol><li><strong>前端"藏起来" ≠ 后端"挡得住"。</strong></li></ol>
+<p>   数据管理面板收进管理员口令，只是 UI 层隐藏。真正的防线是<strong>服务端强制校验</strong>：</p>
+<ul><li>所有 <code>/api/admin/*</code> 都要 <code>x-admin-token</code></li><li>写评价/加店在开启社员口令后必须带 <code>x-member-code</code></li></ul>
+<p>   改前端代码绕不过去。</p>
+<ol><li><strong>删除默认是软删除（留墓碑、可恢复）；只有「永久清理」才物理删除。</strong></li></ol>
+<p>   这是刻意的设计：误删可救。<code>deleted: true</code> 的行会继续同步给所有人，    <code>store.json</code> 里也会一直留着，直到执行一次 <code>admin/purge</code>。</p>
+<h3>1.3 已知限制（交接时务必口头说明）</h3>
+<table><thead><tr><th>限制</th><th>影响</th><th>现状</th></tr></thead><tbody><tr><td><strong>删除权跟设备绑定</strong></td><td>换手机后，社员删不了自己以前写的评价</td><td><code>owner = meta.deviceId</code>，只存在本地。可改进（见第十节）</td></tr><tr><td><strong>昵称 / 口令不跨设备</strong></td><td>新设备要重填昵称和社团口令</td><td>存在 localStorage，有意不同步</td></tr><tr><td><strong>全量 JSON 写盘</strong></td><td>数据量大了会变慢</td><td>见第十节容量表与演进路线</td></tr><tr><td><strong>照片以 base64 存在评价行里</strong></td><td>存储最先被照片撑爆</td><td>永久清理可勾选清空照片</td></tr><tr><td><strong>并发写是"后写覆盖"</strong></td><td>两人同时改同一条，时间新的赢</td><td>社团体量基本不会遇到</td></tr><tr><td><strong>无服务端分页</strong></td><td>单次拉取上限 500 条</td><td>见 4.1；超过会分几轮补齐</td></tr><tr><td><strong>「清空全部数据」只清本地</strong></td><td>点了之后下一轮同步会把服务器内容全部拉回来</td><td>不是"删库"，也删不掉别人的数据；真删除走管理员接口</td></tr><tr><td><strong>「恢复示例数据」只覆盖本地</strong></td><td>本地店铺目录被 25 家种子店铺替换</td><td>不会删除服务器数据，但会打断本地未推送的改动</td></tr></tbody></table>
+<hr/>
+<h2>二、架构与运行</h2>
+<h3>2.1 请求链路（一张图看懂）</h3>
+<pre><code>浏览器
+  │  withShareCode() 给每个同源请求补 ?sharecode=
+  ▼
+平台层（应用发布）：校验 sharecode → 不带就返回「链接不完整」，静态资源直接 403
+  ▼
+server.js（单端口）
+  ├─ GET  /                  → 读 index.html，把腾讯地图 Key 注入 SDK 地址后返回
+  ├─ GET  /api/health        → { ok, restaurants, reviews, mapKey, memberRequired }
+  ├─ GET  /api/restaurants   → select=*
+  ├─ GET  /api/reviews       → select=* / updated_at=gt.X / order / limit
+  ├─ POST /api/restaurants   → 数组 upsert（按 id 合并），社员开启时校验 x-member-code
+  ├─ POST /api/reviews       → 同上
+  ├─ POST /api/admin/*       → 全部要 x-admin-token
+  ├─ POST /api/mapkey        → 设置地图 Key
+  └─ 其它静态文件 → 直接返回；`server.js / data / build / qa / package.json` 一律 403</code></pre>
+<h3>2.2 三个"为什么这么写"（改动前先看，否则会踩坑）</h3>
+<ol><li><strong>地图 Key 是服务端注入的，前端源码里没有。</strong></li></ol>
+<p>   Key 存在 <code>data/config.json</code>，在返回 <code>index.html</code> 时替换进 SDK 地址。    所以前端里搜不到 Key，也不会被 <code>/api</code> 泄露。<strong>Key 不要写进任何前端文件</strong>（有静态测试会卡）。</p>
+<ol><li><strong>PWA 图标是内联 data URL，Service Worker 不预缓存任何东西。</strong></li></ol>
+<p>   因为平台层对<strong>静态资源请求</strong>会 403（它只给带 sharecode 的主文档放行），    所以 <code>manifest.webmanifest</code> 的图标写成 base64 内联，<code>sw.js</code> 的 <code>SHELL = []</code>。    <strong>别改成外部图标文件</strong>，否则 PWA 装不上/图标空白。</p>
+<ol><li><strong><code>package.json</code> 必须存在，但不需要 <code>npm install</code>。</strong></li></ol>
+<p>   后端零依赖，但发布平台会执行安装步骤，没有 <code>package.json</code> 会直接失败。</p>
+<h3>2.3 本地跑起来</h3>
+<pre><code>cd ginkgo-food-map
+PORT=3000 node server.js
+# 打开 http://127.0.0.1:3000/</code></pre>
+<p>与线上的唯一区别：本地没有平台那层 sharecode 校验，所以<strong>不用带 <code>?sharecode=</code></strong>。</p>
+<h3>2.4 发布到线上</h3>
+<ul><li>发布类型：<code>http-service</code>，启动命令：<code>node server.js</code></li><li>发布后拿到 <code>https://&lt;domain&gt;/?sharecode=XXXX</code></li></ul>
+<h3>2.5 发布前必做的一步（最重要的一条）</h3>
+<pre><code>rm -rf data      # 删除本地 data 目录</code></pre>
+<p><strong>为什么</strong>：发布会把整个目录打包上传。如果本地留着 <code>data/</code>，那份<strong>本地测试数据会覆盖线上真实数据</strong>。 踩过一次，代价是所有人的评价被冲掉。</p>
+<blockquote><p>放心：删的是本地副本，服务器上那份不受影响（发布只上传，不清理服务器已有文件）。</p></blockquote>
+<h3>2.6 发布后验收清单</h3>
+<pre><code>CODE=YOUR_SHARECODE
+BASE=https://ginkgo-food-map.app.workbuddy.host
+
+curl -s &quot;$BASE/api/health?sharecode=$CODE&quot;                 # 看店铺数/评价数/地图Key/口令状态
+curl -s -o /dev/null -w &quot;%{http_code}\n&quot; &quot;$BASE/?sharecode=$CODE&quot;   # 期望 200
+curl -s &quot;$BASE/api/restaurants?select=*&amp;sharecode=$CODE&quot; | head -c 200</code></pre>
+<ul><li>[ ] 店铺数、评价数与发布前一致（没被本地数据覆盖）</li><li>[ ] 首页返回 200</li><li>[ ] 地图能加载出成都街道</li><li>[ ] 搜一个店名能出结果（验证地图 Key 还活着）</li><li>[ ] 状态条显示 <code>✓ 已同步到云端</code></li><li>[ ] 手机和电脑各打开一次</li></ul>
+<hr/>
+<h2>三、数据模型</h2>
+<h3>3.1 存储文件</h3>
+<table><thead><tr><th>文件</th><th>内容</th></tr></thead><tbody><tr><td><code>data/store.json</code></td><td><code>{ restaurants: [...], reviews: [...] }</code>，全量、每次写入整文件重写</td></tr><tr><td><code>data/config.json</code></td><td><code>{ admin: {salt, hash, sessions:{}}, member: {enabled, salt, hash}, mapKey }</code></td></tr></tbody></table>
+<p>写入是<strong>先写 <code>.tmp</code> 再 <code>rename</code></strong> 的原子替换，中断不会留下半个文件。</p>
+<h3>3.2 <code>restaurants</code> 行（服务端存的就是"远端格式"）</h3>
+<table><thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>id</code></td><td>string</td><td>主键，如 <code>r02</code>、<code>r_mvmf31</code></td></tr><tr><td><code>name</code> / <code>category</code> / <code>address</code></td><td>string</td><td>店名 / 分类 / 地址</td></tr><tr><td><code>price</code></td><td>number</td><td>人均金额，展示用（<code>¥68</code>）；未填显示"人均待补"</td></tr><tr><td><code>price_level</code></td><td>1–4</td><td>旧档位字段，兼容保留</td></tr><tr><td><code>lat</code> / <code>lng</code></td><td>number</td><td>坐标</td></tr><tr><td><code>tags</code></td><td>string[]</td><td>标签</td></tr><tr><td><code>closed</code> / <code>deleted</code></td><td>boolean</td><td>歇业 / <strong>软删除墓碑</strong></td></tr><tr><td><code>owner</code></td><td>string</td><td>创建者的 <code>deviceId</code>（决定谁能删）</td></tr><tr><td><code>source</code></td><td>'seed'\</td><td>'user'</td><td>种子数据 vs 用户添加</td></tr><tr><td><code>created_at</code> / <code>created_by</code></td><td></td><td>创建时间 / 当时的昵称</td></tr><tr><td><code>needs_location</code></td><td>boolean</td><td>位置待补（只用路名创建时会是 true）</td></tr></tbody></table>
+<h3>3.3 <code>reviews</code> 行</h3>
+<table><thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>id</code></td><td>string</td><td>主键</td></tr><tr><td><code>restaurant_id</code></td><td>string</td><td>外键</td></tr><tr><td><code>author</code></td><td>string</td><td>昵称，缺省 <code>匿名社员</code></td></tr><tr><td><code>scores</code></td><td>object</td><td><code>{taste, value, service, ambience}</code>，各 0–10</td></tr><tr><td><code>verdict</code></td><td>'recommend'\</td><td>'not'</td><td>推荐 / 不推荐</td></tr><tr><td><code>text</code></td><td>string</td><td>正文，5–500 字</td></tr><tr><td><code>photos</code></td><td>string[]</td><td><strong>dataURL（base64）</strong>，不是 URL</td></tr><tr><td><code>comments</code></td><td>object[]</td><td>楼中楼回复，<strong>不参与评分</strong></td></tr><tr><td><code>deleted</code></td><td>boolean</td><td>软删除墓碑</td></tr><tr><td><code>owner</code></td><td>string</td><td>作者的设备 ID</td></tr><tr><td><code>created_at</code> / <code>updated_at</code></td><td>ISO</td><td><code>updated_at</code> 驱动增量同步和冲突判定</td></tr><tr><td><code>source</code></td><td>'seed'\</td><td>'user'</td><td>种子数据不含任何评价</td></tr></tbody></table>
+<h3>3.4 墓碑与孤儿评价</h3>
+<ul><li><strong>墓碑</strong>：<code>deleted: true</code> 的行仍在文件里、仍会同步。这是"能恢复"的代价。</li></ul>
+<p>  墓碑会一直占用体积，靠<strong>永久清理</strong>回收。</p>
+<ul><li><strong>孤儿评价</strong>：<code>restaurant_id</code> 指向一家本地不存在的店。</li></ul>
+<p>  前端 <code>mergeRemoteReview</code> 会把它丢弃 —— 这正是"只看到默认评价"这类怪现象的根因。   所以同步顺序<strong>必须先拉店铺再拉评价</strong>（<code>tick()</code> 里就是这么排的），   永久清理也会顺带清掉孤儿评价。</p>
+<hr/>
+<h2>四、同步机制（出问题先看这节）</h2>
+<h3>4.1 一轮同步做什么</h3>
+<pre><code>tick() 每 15 秒（pollMs，最小 5 秒）
+  ├─ pullRestaurants()  全量拉店铺；本地有未推送改动时，远端不覆盖本地
+  ├─ pullReviews()      按 cursor 增量拉：updated_at=gt.&lt;cursor&gt;，limit 500
+  └─ push()             只推 待上传队列（pendingRestaurants / pendingSync）里的 id</code></pre>
+<p>三个关键点：</p>
+<ol><li><strong>pull 靠 <code>Sync.cursor</code> 做增量</strong>：<code>cursor</code> 是<strong>内存变量</strong>（刷新即重置），</li></ol>
+<p>   所以<strong>每次打开页面的第一次拉取都是全量</strong>（<code>order=updated_at.asc&amp;limit=500</code>），    之后同一会话内按 <code>updated_at=gt.&lt;cursor&gt;</code> 增量。    这带来两个结论：</p>
+<ul><li><strong>换设备 / 新浏览器 / 刷新页面 = 重新全量拉一遍</strong> → 新设备数据自动就齐，社员无需任何操作</li><li><strong>评价总数超过 500 条时</strong>，一次拉不完，会分几轮补齐（按更新时间从旧到新）。</li></ul>
+<p>     到那个量级就该考虑演进方案了（见第十节）</p>
+<ol><li><strong>push 只推"待上传队列"，不是全量上传</strong>。</li></ol>
+<p>   写入时把 id 塞进 <code>meta.pendingSync</code> / <code>meta.pendingRestaurants</code>，推成功后清空。    这意味着：<strong>只要状态条是绿的，内容就已经在服务器上了。</strong></p>
+<ol><li><strong>照片在本地是 IndexedDB Blob，在云端是 dataURL</strong>，两端自动互转</li></ol>
+<p>   （<code>photoKeyToDataUrl</code> / <code>dataUrlToPhotoKey</code> / <code>adoptRemotePhotos</code>）。    所以照片<strong>能跨设备同步</strong>，但<strong>不进 JSON 快照</strong>。</p>
+<h3>4.2 冲突规则</h3>
+<ul><li>同一条记录：<strong><code>updated_at</code> 新的赢</strong>（服务端按 id 整行 <code>Object.assign</code> 合并）</li><li>本地有未推送改动时，pull <strong>不会</strong>覆盖它（保护离线编辑）</li></ul>
+<h3>4.3 照片的两个硬限制</h3>
+<table><thead><tr><th>限制</th><th>位置</th><th>后果</th></tr></thead><tbody><tr><td>每条评价最多 <strong>2 张</strong>，长边压到 1200px，单张 ≤200KB</td><td>前端 <code>handlePhotoFiles()</code></td><td>超了直接丢弃并提示</td></tr><tr><td>单条评价照片总量 <strong>&gt; 400KB 就只传文字</strong></td><td>前端 <code>Sync.push()</code></td><td>照片不会上传，但文字照常同步</td></tr></tbody></table>
+<p>第二条是防网关拒收的兜底。社员反馈"我传了图别人看不到"时，先怀疑这个。</p>
+<h3>4.4 状态条语义（排障第一手信息）</h3>
+<table><thead><tr><th>文案</th><th>代码条件</th><th>含义</th></tr></thead><tbody><tr><td><code>✓ 已同步到云端 · HH:MM</code></td><td>正常</td><td>已上传、已拉取</td></tr><tr><td><code>离线模式，改动已暂存，联网后自动合并</code></td><td><code>navigator.onLine === false</code></td><td>本机排队中</td></tr><tr><td><code>云端同步失败，已回退本地</code></td><td><code>Sync.lastError</code></td><td>网络/服务端异常</td></tr></tbody></table>
+<p>前两条<strong>不需要人工干预</strong>，联网后自动补传。第三条持续出现才需要排查。</p>
+<h3>4.5 关于"社员能不能自己跨设备同步"</h3>
+<p><strong>能，而且是自动的</strong>——因为内容在服务器上，新设备打开链接即全量拉取。 只有一种情况拿不到：<strong>内容只存在于某台设备的浏览器里、从未成功推送</strong> （离线写入后一直没联网，或那台设备同步一直失败）。 解决办法不是导出文件，而是<strong>把那台设备联网、打开页面、等状态条变绿</strong>。</p>
+<p>导出 JSON 快照<strong>不含照片</strong>，所以它只能当<strong>文字兜底存档</strong>，不能当迁移手段。 文档里必须写清这一点，否则社员会以为导一次就万事大吉。</p>
+<hr/>
+<h2>五、口令与安全</h2>
+<h3>5.1 管理员口令</h3>
+<table><thead><tr><th>机制</th><th>实现</th></tr></thead><tbody><tr><td>存储</td><td><code>config.json</code> 里只存 <strong>scrypt 哈希 + 随机 salt</strong>，源码里也只有哈希</td></tr><tr><td>登录</td><td><code>POST /api/admin/login {code}</code> → <code>{token, expiresAt}</code></td></tr><tr><td>有效期</td><td><strong>7 天</strong>（<code>SESSION_TTL_MS</code>）</td></tr><tr><td>防暴破</td><td>同一 IP <strong>10 分钟内 8 次</strong>失败 → 429 锁定</td></tr><tr><td>改口令</td><td><code>POST /api/admin/change-code</code> → <strong>旧会话全部作废</strong>并发一个新 token</td></tr><tr><td>最小长度</td><td>6 位</td></tr></tbody></table>
+<p>改口令会<strong>轮换 salt 并清空 sessions</strong>，所以换届改完，所有旧设备立刻掉线——这是特性不是 bug。</p>
+<p><strong>口令忘了怎么办</strong>：删掉服务器 <code>data/config.json</code> 里的 <code>admin</code> 段，下次请求会用源码里的初始哈希重建（回到初始口令）；或者重新部署一版。</p>
+<h3>5.2 社团口令（防刷分）</h3>
+<table><thead><tr><th>机制</th><th>实现</th></tr></thead><tbody><tr><td>开关</td><td><code>config.member.enabled</code>，<code>/api/health</code> 里的 <code>memberRequired</code> 会对外暴露</td></tr><tr><td>校验点</td><td><code>POST /api/restaurants</code>、<code>POST /api/reviews</code> 之前，服务端强制</td></tr><tr><td>存储</td><td>同样只存 scrypt 哈希 + salt，留空 = 关闭</td></tr><tr><td>客户端</td><td>存在 localStorage（<code>ginkgo.member.v1</code>），<strong>每台设备独立</strong></td></tr></tbody></table>
+<blockquote><p><strong>关键判断</strong>：如果担心链接外流被刷分，<strong>只有开启社团口令这一条真正有效</strong>。</p><p>收起"写评价"按钮、隐藏面板这些都只是 UI，挡不住直接发请求的人。</p></blockquote>
+<hr/>
+<h2>六、日常需要哪些操作</h2>
+<table><thead><tr><th>频率</th><th>操作</th><th>路径</th></tr></thead><tbody><tr><td><strong>按需</strong></td><td>删违规评价</td><td>详情页 → 该条评价 → 「删除」（需管理员）</td></tr><tr><td><strong>按需</strong></td><td>误删恢复</td><td>详情页该条显示「已删除」→ 恢复；店铺在管理面板「已删除的店铺」</td></tr><tr><td><strong>按需</strong></td><td>批量收评价</td><td>数据管理 → 导入收集表（CSV/TSV）</td></tr><tr><td><strong>按需</strong></td><td>开关社团口令</td><td>数据管理 → 管理员 → 社团口令（留空保存 = 关闭）</td></tr><tr><td><strong>每月</strong></td><td>看一眼 <code>/api/health</code>，记下店铺数/评价数</td><td>一条 curl</td></tr><tr><td><strong>每学期</strong></td><td>导出 JSON 快照 → 存社团网盘</td><td>数据管理 → JSON 备份 → 导出 JSON 快照</td></tr><tr><td><strong>每学期末</strong></td><td>永久清理（会自动先导出快照）</td><td>数据管理 → 管理员 → 永久清理</td></tr><tr><td><strong>换届</strong></td><td>改管理员口令 + 改社团口令</td><td>数据管理 → 管理员</td></tr><tr><td><strong>Key 到期前</strong></td><td>换地图 Key</td><td>数据管理 → 管理员 → 地图搜索 → 保存并启用</td></tr></tbody></table>
+<p><strong>不需要</strong>做的事：不用管服务器、不用管数据库备份（导 JSON 就行）、不用手动重启、不用更新依赖。</p>
+<blockquote><p>地图 Key 到期日：<strong>2027-10-24</strong>。到 2027 年秋天之前换一次即可，<strong>不是每天轮换</strong>。</p><p>Key 失效的后果只是<strong>搜不了店名</strong>，底图照样能显示、已有的店和评价不受影响。</p></blockquote>
+<hr/>
+<h2>七、核心代码在哪</h2>
+<h3>7.1 目录</h3>
+<pre><code>ginkgo-food-map/
+├── index.html            ← 生成物，不要手改（下次构建会覆盖）
+├── server.js             ← 后端：静态托管 + API + 管理员会话 + 地图 Key 注入
+├── package.json          ← 必须有（发布平台会跑安装步骤）
+├── manifest.webmanifest  ← PWA 配置（图标是内联 data URL）
+├── sw.js                 ← Service Worker（不预缓存，跳过 /api 与跨域）
+├── assets/               ← 图标源文件
+├── build/                ← ★ 真正的源码
+│   ├── core.js           ← 纯逻辑（无 DOM，可单测）：评分/杯型/CSV 解析
+│   ├── app.js            ← 所有界面 / 交互 / 同步 / 管理员 / 社团口令
+│   ├── seed.js           ← 25 家种子店铺（不含任何评价）
+│   ├── style.css
+│   ├── template.html     ← HTML 骨架 + 各弹层
+│   └── build.py          ← 合成 index.html
+├── qa/                   ← 测试（450+ 条断言）
+├── data/                 ← 运行时数据（发布前删掉！）
+└── 文档：社员使用指南.md / 工作人员指南.md / 使用教程.md / 群公告.txt</code></pre>
+<p><strong>改代码的原则</strong>：改 <code>build/</code> 里的文件 → 跑 <code>python build/build.py</code> 重新合成 <code>index.html</code>。</p>
+<h3>7.2 关键位置速查</h3>
+<table><thead><tr><th>想改什么</th><th>看哪</th></tr></thead><tbody><tr><td>评分公式 / 杯型阈值</td><td><code>core.js</code>：<code>overall()</code>、<code>tierOf()</code>、<code>TIERS</code>（8.6 / 7.4 / 6.2 / 5.0）</td></tr><tr><td>字段与清洗</td><td><code>app.js</code>：<code>normalizeRestaurant()</code>、<code>normalizeReview()</code>、<code>sanitizeState()</code></td></tr><tr><td>软删除过滤</td><td><code>liveRestaurants()</code>、<code>liveReviews()</code>（所有统计和列表都走它们）</td></tr><tr><td>同步</td><td><code>app.js</code>：<code>Sync.tick / pullRestaurants / pullReviews / push / schedulePush</code></td></tr><tr><td>图片压缩与限制</td><td><code>handlePhotoFiles()</code>（2 张 / 1200px / 200KB）、<code>Sync.push()</code>（400KB 阈值）</td></tr><tr><td>管理员</td><td><code>adminApi()</code>、<code>setAdminToken()</code>、<code>verifyAdmin()</code>、<code>updateAdminUI()</code>、<code>renderAdminTrash()</code></td></tr><tr><td>社团口令</td><td><code>refreshMemberState()</code>、<code>setMemberCode()</code>、<code>syncHeaders()</code>（<code>x-member-code</code>）</td></tr><tr><td>店名 / 路名搜索</td><td><code>doPlaceSearch()</code>、<code>geocodeAddress()</code>、<code>PURE_ADDRESS</code>、<code>ADDRESS_LIKE</code></td></tr><tr><td>人均档位</td><td><code>PRICE_PRESETS</code>（9 档）、<code>priceLabel()</code>、<code>priceToLevel()</code></td></tr><tr><td>界面渲染</td><td><code>renderList()</code>、<code>renderDrawer()</code>、<code>reviewHtml()</code>、<code>repliesHtml()</code></td></tr><tr><td>后端路由</td><td><code>server.js</code>：<code>applyQuery()</code>、<code>upsert()</code>、<code>handleAdmin()</code>、<code>handleApi()</code></td></tr></tbody></table>
+<h3>7.3 后端接口全表</h3>
+<table><thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead><tbody><tr><td>GET</td><td><code>/api/health</code></td><td><code>{ok, restaurants, reviews, mapKey, memberRequired}</code></td></tr><tr><td>GET</td><td><code>/api/restaurants?select=*</code></td><td>店铺列表</td></tr><tr><td>GET</td><td><code>/api/reviews?select=*&amp;updated_at=gt.X&amp;order=&amp;limit=</code></td><td>评价（PostgREST 风格子集）</td></tr><tr><td>POST</td><td><code>/api/restaurants</code> / <code>/api/reviews</code></td><td>数组 upsert，按 id 合并。<strong>开启社团口令后必须带 <code>x-member-code</code></strong></td></tr><tr><td>POST</td><td><code>/api/admin/login</code></td><td><code>{code}</code> → <code>{token, expiresAt}</code>（7 天）</td></tr><tr><td>GET</td><td><code>/api/admin/session</code></td><td>校验 <code>x-admin-token</code></td></tr><tr><td>POST</td><td><code>/api/admin/logout</code></td><td>退出（删 token）</td></tr><tr><td>POST</td><td><code>/api/admin/change-code</code></td><td><code>{code}</code>，≥6 位；旧会话全部作废</td></tr><tr><td>POST</td><td><code>/api/admin/review</code></td><td>`{id, action:'delete'\</td><td>'restore'}`</td></tr><tr><td>POST</td><td><code>/api/admin/restaurant</code></td><td>`{id, action:'delete'\</td><td>'restore'}`</td></tr><tr><td>POST</td><td><code>/api/admin/member-code</code></td><td><code>{code}</code>，留空 = 关闭</td></tr><tr><td>POST</td><td><code>/api/admin/purge</code></td><td><code>{dropPhotos}</code> → <code>{removedRestaurants, removedReviews, remaining}</code></td></tr><tr><td>POST</td><td><code>/api/mapkey</code></td><td>设置地图 Key</td></tr></tbody></table>
+<blockquote><p>所有 <code>/api/admin/*</code> 都要 <code>x-admin-token</code>，且<strong>服务端校验</strong>，改前端没用。</p></blockquote>
+<hr/>
+<h2>八、测试</h2>
+<pre><code>node qa/test-core.js           # 112 条：评分公式、杯型阈值、CSV 解析
+node qa/test-seed.js           #  12 条：种子店铺（断言&quot;零条种子评价&quot;）
+node qa/test-static.js         #  76 条：合规（无第三方 CDN / 无明文密钥）
+node qa/test-browser.js        #  86 条：浏览器全流程
+node qa/test-fullstack.js      #  25 条：后端同步 + 回复 + 人均（自带 server，端口 8956）
+node qa/test-admin.js          #  40 条：管理员 + 社团口令 + 永久清理（自带 server，端口 8961）
+node qa/test-place-search.js   #  25 条：店名/路名搜索
+node qa/test-sync-config.js    #  12 条：云端地址配置
+node qa/test-edge.js           #  64 条：边界与降级</code></pre>
+<p>合计 <strong>450+ 条断言</strong>。</p>
+<ul><li>测试<strong>各自启动自己的 server</strong>（独立端口），不会打到线上，也不会读线上数据</li><li>浏览器测试基于 CDP（<code>qa/lib/cdp.js</code>），无头 Chrome</li><li><strong>改了数据模型就全跑一遍</strong>，别只跑相关的</li><li>加测试：照 <code>qa/test-*.js</code> 的写法，断言要写<strong>具体值</strong>，不要只断言"不为空"</li></ul>
+<blockquote><p>已知噪声：完整浏览器跑一轮会出现 1–2 次无消息、无堆栈的 <code>Uncaught (in promise) null</code>，</p><p>无法按步骤复现。测试里已把它单列，不计入失败；<strong>任何带消息或堆栈的异常仍必须为 0</strong>。</p></blockquote>
+<hr/>
+<h2>九、故障排查</h2>
+<h3>9.1 先跑这几条（30 秒定位）</h3>
+<pre><code>CODE=YOUR_SHARECODE
+BASE=https://ginkgo-food-map.app.workbuddy.host
+
+curl -s &quot;$BASE/api/health?sharecode=$CODE&quot;; echo          # ok? 店铺数? 评价数? mapKey? memberRequired?
+curl -s -o /dev/null -w &quot;home=%{http_code}\n&quot; &quot;$BASE/?sharecode=$CODE&quot;
+curl -s &quot;$BASE/api/restaurants?select=*&amp;sharecode=$CODE&quot; | python -c &quot;import sys,json;d=json.load(sys.stdin);print(&#x27;shops&#x27;,len(d),&#x27;deleted&#x27;,sum(1 for x in d if x.get(&#x27;deleted&#x27;)))&quot;
+curl -s &quot;$BASE/api/reviews?select=*&amp;sharecode=$CODE&quot;     | python -c &quot;import sys,json;d=json.load(sys.stdin);print(&#x27;reviews&#x27;,len(d),&#x27;deleted&#x27;,sum(1 for x in d if x.get(&#x27;deleted&#x27;)))&quot;</code></pre>
+<ul><li><code>home=200</code> 且 <code>ok:true</code> → 服务活着</li><li><code>mapKey:false</code> → 搜索会失效（底图不受影响）</li><li><code>memberRequired:false</code> → 当前<strong>任何人都能写</strong>，刷分风险敞口</li><li><code>deleted</code> 数量大 → 该跑一次永久清理了</li></ul>
+<h3>9.2 问题对照表</h3>
+<table><thead><tr><th>#</th><th>现象</th><th>原因</th><th>处理</th></tr></thead><tbody><tr><td>1</td><td>页面越来越卡</td><td>数据涨到几千条，或照片太多</td><td>① 永久清理 ② 收紧图片 ③ &gt;20MB 换 SQLite ④ 照片挪对象存储</td></tr><tr><td>2</td><td>搜索定位失效</td><td>地图 Key 到期/被限流</td><td>换个人开发者 Key，并在腾讯位置服务控制台加域名白名单。<strong>底图不受影响</strong></td></tr><tr><td>3</td><td>管理员口令忘了</td><td>—</td><td>删 <code>data/config.json</code> 的 <code>admin</code> 段（回到初始口令），或重新部署一版</td></tr><tr><td>4</td><td>误删重要评价</td><td>—</td><td>软删除可恢复：详情页「已删除」→ 恢复 / 管理面板回收站</td></tr><tr><td>5</td><td>发布后数据变旧/变少</td><td>十有八九<strong>发布前没删本地 <code>data/</code></strong></td><td>立刻停止写入，用网盘最新 JSON 快照导入恢复</td></tr><tr><td>6</td><td>有人刷分</td><td>链接外流 + 未开社团口令</td><td><strong>开启社团口令</strong>（服务端强制），再删刷分内容</td></tr><tr><td>7</td><td>两台设备同时改，一条丢失</td><td>并发写：后写覆盖先写</td><td>量小忽略；量大换 SQLite + 乐观锁</td></tr><tr><td>8</td><td>照片撑爆存储</td><td>照片是 base64 存在评价行里</td><td>永久清理勾选「清空所有照片」；长期方案：对象存储只存链接</td></tr><tr><td>9</td><td>链接打不开 / sharecode 失效</td><td>平台侧调整</td><td>重新发布拿新链接，更新群公告和文档</td></tr><tr><td>10</td><td>PWA 装了打不开/图标空白</td><td>SW 缓存旧版；或图标被改成外部文件</td><td>卸载重装；<strong>确认图标仍是内联 data URL</strong></td></tr><tr><td>11</td><td>地图空白</td><td>网络 / 平台拦截</td><td>看状态条；多半是网络</td></tr><tr><td>12</td><td>导入 CSV 后分数不对</td><td>字段对不上 / 分数越界</td><td>用「解析并预览」看跳过原因；分数必须在 0–10</td></tr><tr><td>13</td><td>某人看不到别人的评价</td><td>本地有未推送改动 + cursor 落后</td><td>让他看状态条；刷新；必要时清本机 <code>ginkgo.foodmap.*</code> 让它重新全量拉</td></tr><tr><td>14</td><td>照片传了别人看不到</td><td>单条评价照片总量 &gt;400KB 只传了文字</td><td>换小一点的图重传</td></tr><tr><td>15</td><td>店铺数对不上（比预期少）</td><td>墓碑 + 执行一次永久清理</td><td>这是正常的：清理会把墓碑物理移除。<strong>清理前务必先导出快照</strong></td></tr></tbody></table>
+<h3>9.3 数据恢复演练（建议每学期做一次，五分钟）</h3>
+<ol><li><code>curl .../api/health</code> 记下当前店铺数/评价数（记为 A）</li><li>导出 JSON 快照，改名 <code>ginkgo-YYYYMMDD.json</code>，放到<strong>社团网盘</strong>（不是本地）</li><li>在一个<strong>本地实例</strong>上（<code>PORT=3000 node server.js</code>，不带 sharecode）导入这份快照</li><li>打开 <code>http://127.0.0.1:3000/</code>，核对店铺数和评价数 == A</li><li>确认照片确实没有（<strong>这是预期行为</strong>，快照不含照片）</li><li>确认导入没有重复条目（按 id 去重）</li></ol>
+<p>做过一次，真出事那天就不会手忙脚乱。</p>
+<hr/>
+<h2>十、容量与演进路线</h2>
+<h3>10.1 容量参考</h3>
+<table><thead><tr><th>规模</th><th>状态</th><th>该做什么</th></tr></thead><tbody><tr><td>&lt; 1000 条评价</td><td>完全无压力</td><td>什么都不用做</td></tr><tr><td>1000 – 3000 条</td><td>仍可用</td><td>收紧图片 + 每学期永久清理</td></tr><tr><td>&gt; 3000 条 / <code>store.json</code> &gt; 20MB</td><td>开始卡</td><td>换 SQLite</td></tr><tr><td>照片多</td><td><strong>最先出问题</strong></td><td>优先限制，或挪对象存储</td></tr></tbody></table>
+<p>每次全量写盘的成本随体积线性上升，这是当前架构唯一的硬伤。</p>
+<h3>10.2 三条演进路线（按性价比排序）</h3>
+<table><thead><tr><th>方案</th><th>解决什么</th><th>大致工作量</th><th>风险</th></tr></thead><tbody><tr><td><strong>A. 照片挪对象存储</strong></td><td>存储体积、同步体积</td><td>中：评价行只存 URL，前端改上传链路</td><td>要引入外部存储服务</td></tr><tr><td><strong>B. store.json → SQLite</strong></td><td>写盘性能、并发冲突</td><td>中：<code>server.js</code> 换持久层，API 语义保持不变</td><td>需要迁移脚本 + 重新发布</td></tr><tr><td><strong>C. 身份迁移（社员自带 ID）</strong></td><td>换设备后删不了自己的旧评价</td><td>小：老设备导出一个短码，新设备输入后接管 <code>owner</code></td><td>低，但要防滥用（码泄露=删除权泄露）</td></tr></tbody></table>
+<blockquote><p><strong>建议顺序</strong>：先做 C（小、直接解决社员的实际痛点），</p><p>等真的上三千条再考虑 B，A 在照片成为负担时做。</p><p>现在这个体量（几十家店、几十条评价），<strong>什么都先别动</strong>。</p></blockquote>
+<h3>10.3 什么情况下应该推倒重来</h3>
+<ul><li>社团要对外开放、要接推广 → 那已经不是这个工具了，另起炉灶</li><li>要真实账号体系 → 同上</li><li>数据量上万 → 直接换成熟方案（Supabase 之类），别在 JSON 上硬扛</li></ul>
+<hr/>
+<h2>十一、换届交接清单</h2>
+<p>交给下一届时，把这七样东西交出去：</p>
+<ol><li><strong>网址</strong>（含 <code>?sharecode=</code>）</li><li><strong>管理员口令</strong> —— 交接当天在面板里改一次，改完所有旧设备立刻掉线</li><li><strong>社团口令</strong> —— 同样改一次，所有人重新填（提前在群里预告）</li><li><strong>最新的 JSON 快照</strong> —— 存<strong>社团网盘</strong>，不要只存在某个人电脑里</li><li><strong>这份文档</strong> + 《社员使用指南》</li><li><strong>地图 Key 到期日：2027-10-24</strong>（以及 Key 从哪个账号申请的）</li><li><strong>三条铁律</strong>（口头强调）：</li></ol>
+<ul><li><strong>发布前 <code>rm -rf data</code></strong></li><li><strong>永久清理前先导出快照</strong></li><li><strong>改完代码跑一遍测试</strong></li></ul>
+<p><strong>建议</strong>：改完口令后把新口令记在<strong>社团共享文档</strong>里（不是只有一个人知道的地方）。 口令丢了只能重置，很麻烦。</p>
+<h3>交接当天推荐顺序</h3>
+<ol><li>导出 JSON 快照 → 传网盘（旧负责人执行）</li><li>新负责人自己装一次桌面版、打开链接、确认能看到全部数据</li><li>改管理员口令（旧会话全部作废）</li><li>改社团口令 → 群里发新口令 + 附《社员使用指南》链接</li><li>在两台设备上各验证一次：能看、能写、能同步</li><li>更新群公告里的链接</li></ol>
+<hr/>
+<h2>十二、安全与合规注意</h2>
+<ul><li><strong>不要在评价里出现</strong>同学的真实姓名、学号、手机号 —— 内容公开可见</li><li>照片里有人入镜要先征得同意</li><li>地图 Key 属于个人开发者账号，<strong>不要写进前端、不要提交到公开仓库</strong></li><li>口令<strong>不要发在大群</strong>，管理员口令只给具体负责人</li><li>这是校内社团内部工具，<strong>不要用于商业推广</strong></li></ul>
+<hr/>
+<h2>十三、最后</h2>
+<p>设计原则是：<strong>能跑就行、别过度设计</strong>。 没有账号体系、没有数据库、没有后台管理界面——因为一个社团的美食地图不需要。</p>
+<p>真正需要记住的只有四件事：</p>
+<ol><li><strong>发布前删 <code>data/</code></strong></li><li><strong>永久清理前先导出快照</strong></li><li><strong>改完代码跑一遍测试</strong></li><li><strong>每学期导出一份 JSON 存网盘</strong></li></ol>
+<p>做到这四条，它能一直跑到下一届、再下一届。</p>
+<footer>由 tools/md2html.py 从 Markdown 自动生成 · 源文件：工作人员指南.md</footer>
+</div>
+</body>
+</html>
