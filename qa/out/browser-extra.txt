@@ -1,7 +1,0 @@
-
-[INFO] 新增无评价店铺: {"chipText":"待评级 1","cardScore":"—","cardBadge":"待评级","cardCount":"0"}
-[INFO] 待评级店铺抽屉: {"kpis":["—","—","0"],"hint":true,"badge":"待评级"}
-[INFO] 写完不推荐评价: {"score":"7.0分","drawerKpis":["7.0","0%","1"]}
-
-===== 浏览器补充验证 =====
-断言总数: 10 | 通过: 10 | 失败: 0
