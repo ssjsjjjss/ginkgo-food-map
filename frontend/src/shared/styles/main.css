@@ -1,0 +1,262 @@
+:root {
+  color: #2b2a26;
+  background: #fbf7ef;
+  font-family: Inter, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+button,
+a {
+  font: inherit;
+}
+a {
+  color: inherit;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+.topbar {
+  width: min(1180px, calc(100% - 40px));
+  height: 76px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ded7c9;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #fff;
+  background: #2b2a26;
+  font-weight: 800;
+}
+.brand strong,
+.brand small {
+  display: block;
+}
+.brand strong {
+  font-size: 16px;
+}
+.brand small {
+  margin-top: 3px;
+  color: #776f62;
+  font-size: 11px;
+}
+nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+nav a {
+  text-decoration: none;
+  font-weight: 700;
+}
+nav button {
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+}
+.login-button {
+  padding: 10px 18px;
+  border-radius: 999px;
+  color: #fff;
+  background: #2b2a26;
+}
+
+.home-page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 64px 0 96px;
+}
+.hero {
+  min-height: 480px;
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 64px;
+  align-items: center;
+}
+.eyebrow {
+  color: #986d08;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+.hero h1 {
+  margin: 18px 0;
+  font-family: Georgia, 'Songti SC', serif;
+  font-size: clamp(52px, 8vw, 94px);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+.hero h1 span {
+  color: #b67c00;
+}
+.summary {
+  max-width: 620px;
+  color: #625c52;
+  font-size: 18px;
+  line-height: 1.8;
+}
+.hero-actions {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.primary-action {
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: #2b2a26;
+  font-weight: 800;
+}
+.hero-actions a {
+  color: #6c6254;
+  font-weight: 700;
+}
+.hero-card {
+  aspect-ratio: 1;
+  padding: 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 48px;
+  background: #e9b949;
+  box-shadow: 0 24px 70px rgb(76 54 8 / 18%);
+  transform: rotate(2deg);
+}
+.hero-card .cup {
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  margin-bottom: auto;
+  border-radius: 50%;
+  color: #e9b949;
+  background: #2b2a26;
+  font-family: serif;
+  font-size: 36px;
+}
+.hero-card p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.hero-card strong {
+  font-size: 30px;
+}
+.hero-card small {
+  margin-top: 10px;
+  color: #59450e;
+}
+
+.status-card {
+  margin: 32px 0 96px;
+  padding: 20px 24px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #ded7c9;
+  border-radius: 18px;
+  background: #fffdf8;
+}
+.status-card p {
+  margin: 5px 0 0;
+  color: #776f62;
+  font-size: 13px;
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #b1a99c;
+  box-shadow: 0 0 0 6px #ede8de;
+}
+.status-card.online .status-dot {
+  background: #328455;
+  box-shadow: 0 0 0 6px #dcefe3;
+}
+.capability-section {
+  padding-top: 30px;
+  border-top: 1px solid #ded7c9;
+}
+.section-heading h2 {
+  margin: 8px 0 32px;
+  font-family: Georgia, 'Songti SC', serif;
+  font-size: clamp(32px, 5vw, 52px);
+}
+.capability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.capability-grid article {
+  min-height: 180px;
+  padding: 28px;
+  border-radius: 24px;
+  background: #f0eadf;
+}
+.capability-grid h3 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+.capability-grid p {
+  margin: 0;
+  color: #6b6357;
+  line-height: 1.7;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    width: min(100% - 28px, 1180px);
+  }
+  nav a,
+  nav button:not(.login-button) {
+    display: none;
+  }
+  .home-page {
+    width: min(100% - 28px, 1180px);
+    padding-top: 34px;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .hero-card {
+    max-width: 420px;
+    width: 100%;
+    justify-self: center;
+  }
+  .capability-grid {
+    grid-template-columns: 1fr;
+  }
+}
